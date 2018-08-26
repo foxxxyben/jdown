@@ -55,6 +55,24 @@ const addToGroup = (files, file) => {
 	return true;
 };
 
+const nestGroups = (files, file) => {
+	const parts = file.split(/\\|\//);
+
+	var level = files;
+	var depth = 0;
+	while depth < parts.length {
+		if (!level[parts[depth]]) {
+			level[parts[depth]] = [];
+		}
+		level = level[parts[depth]];
+		depth++;
+	}
+
+	level.push(files[file]);
+	delete files[file];
+	return true;
+};
+
 const transform = ({dir, assets}) => async (files, metalsmith, done) => {
 	const asset = transformAssets(dir, assets);
 
@@ -73,11 +91,13 @@ const transform = ({dir, assets}) => async (files, metalsmith, done) => {
 		transformFileContents(files, file);
 		file = transformFileNames(files, file);
 
-		const isCollection = addToCollection(files, file);
+		nestGroups(files, file);
 
-		if (!isCollection) {
-			addToGroup(files, file);
-		}
+		// const isCollection = addToCollection(files, file);
+		//
+		// if (!isCollection) {
+		// 	addToGroup(files, file);
+		// }
 	});
 
 	if (asset.found) {
